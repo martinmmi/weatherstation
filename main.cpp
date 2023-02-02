@@ -19,10 +19,10 @@ float pressure;
 float altitude;
 float humidity;
 
-char buf_temperature[6];
-char buf_pressure[8];
-char buf_altitude[5];
-char buf_humidity[6];
+char buf_temperature[20] = {' '};
+char buf_pressure[20] = {' '};
+char buf_altitude[20] = {' '};
+char buf_humidity[20] = {' '};
 
 Adafruit_BME280 bme(BME_CS);    // hardware spi
 
@@ -109,14 +109,38 @@ void loop() {
     tft.setTextSize(4);
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_WHITE);
+    //tft.setFreeFont();
 
-    //sprintf(buf_temperature, "%d", temperature);
-    //tft.drawString(buf_temperature, 0, 0, 1);
+    int temperature_int = (int) temperature;
+    float temperature_float = (abs(temperature) - abs(temperature_int)) * 100;
+    int temperature_fra = (int)temperature_float;
+    sprintf (buf_temperature, "%d.%d", temperature_int, temperature_fra);
+
+    int pressure_int = (int) pressure;
+    float pressure_float = (abs(pressure) - abs(pressure_int)) * 100;
+    int pressure_fra = (int)pressure_float;
+    sprintf (buf_pressure, "%d.%d", pressure_int, pressure_fra);
+
+    int altitude_int = (int) altitude;
+    float altitude_float = (abs(altitude) - abs(altitude_int)) * 100;
+    int altitude_fra = (int)altitude_float;
+    sprintf (buf_altitude, "%d.%d", altitude_int, altitude_fra);
+
+    int humidity_int = (int) humidity;
+    float humidity_float = (abs(humidity) - abs(humidity_int)) * 100;
+    int humidity_fra = (int)humidity_float;
+    sprintf (buf_humidity, "%d.%d", humidity_int, humidity_fra);
+
+    tft.drawString(buf_temperature, 20, 10, 1); tft.drawString("C", 225, 10, 1);
+    tft.drawString(buf_pressure, 20, 50, 1); tft.drawString("hPa", 225, 50, 1);
+    tft.drawString(buf_altitude, 20, 90, 1); tft.drawString("m", 225, 90, 1);
+    tft.drawString(buf_humidity, 20, 130, 1); tft.drawString("%", 225, 130, 1);
 
     Serial.print("Temperature = "); Serial.print(temperature); Serial.println(" *C");
     Serial.print("Pressure = "); Serial.print(pressure); Serial.println(" hPa");
     Serial.print("Approx. Altitude = "); Serial.print(altitude); Serial.println(" m");
     Serial.print("Humidity = "); Serial.print(humidity); Serial.println(" %");
+    Serial.println("");
 
     delay(2000);
 
