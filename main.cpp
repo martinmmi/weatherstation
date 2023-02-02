@@ -201,12 +201,12 @@ void loop() {
       tft.drawString(buf_pressure, 45, 70, 6); tft.drawString("hPa", 230, 88, 4);
       step = 3;
     }
-    if (((millis() - lastDisplayPart > 8000 + random (2000)) && (millis() - lastDisplayPart < 15000)) && (step == 3)) {
+    if (((millis() - lastDisplayPart > 8000 + random (2000)) && (millis() - lastDisplayPart < 14000)) && (step == 3)) {
       tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
       tft.drawString(buf_humidity, 90, 70, 6); tft.drawString("%", 228, 87, 4);
       step = 4;
     }
-    if ((millis() - lastDisplayPart > 15000) && (step == 4)) {
+    if ((millis() - lastDisplayPart > 14000) && (step == 4)) {
       lastDisplayPart = millis();
       lastDisplayPrint = millis();
       step = 1;
