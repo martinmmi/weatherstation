@@ -12,7 +12,9 @@
 #include "pinout.h"
 
 #define LCD_MODULE_CMD_1
-#define SEALEVELPRESSURE_HPA (1027)     // default 1013.25+
+#define SEALEVELPRESSURE_HPA (1027)                  // default 1013.25
+#define LED_PIN                        1
+#define LED_COUNT                      3
 
 float temperature;
 float pressure;
@@ -25,6 +27,20 @@ char buf_altitude[20] = {' '};
 char buf_humidity[20] = {' '};
 
 Adafruit_BME280 bme(BME_CS);    // hardware spi
+
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+int defaultBrightnessLed = 100;       // value from 1 to 255
+int step = 1;
+
+long lastReadSensor = 0;
+long lastDisplayPrint = 0;
+long lastDisplayPart = 0;
+long lastSerialPrint = 0;
+
+bool initSensor = HIGH;
+bool initDisplay = HIGH;
+bool initSerial = HIGH;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -92,16 +108,40 @@ void setup() {
     while (1);
   }
 
+  strip.begin();
+  strip.setBrightness(defaultBrightnessLed);    
+  strip.show();
+
 }
 
 //////////////////////////////////////////////////////////////////////
 
 void loop() {
 
+  if ((millis() - lastReadSensor > 100) || (initSensor == HIGH)) {
     temperature = bme.readTemperature();
     pressure = bme.readPressure() / 100.0F;
     altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
     humidity = bme.readHumidity();
+
+    strip.clear();
+
+    if (temperature < 20) {													
+      strip.fill(strip.Color(150 - (3 * temperature), 30, 75 + (3 * temperature)), 0, LED_COUNT);	
+    } 
+
+    if (temperature >= 20) {			
+      strip.fill(strip.Color(150 + (3 * temperature), 30, 75 - (3 * temperature)), 0, LED_COUNT);														            	
+    }
+
+    strip.show();
+
+    initSensor = LOW;
+    lastReadSensor = millis();
+  }
+
+
+  if ((millis() - lastSerialPrint > 2000) || (initSerial == HIGH)) {
 
     Serial.print("Temperature = "); Serial.print(temperature); Serial.println(" *C");
     Serial.print("Pressure = "); Serial.print(pressure); Serial.println(" hPa");
@@ -109,10 +149,15 @@ void loop() {
     Serial.print("Humidity = "); Serial.print(humidity); Serial.println(" %");
     Serial.println("");
 
+    initSerial = LOW;
+    lastSerialPrint = millis();
+  }
+  
+
+  if ((millis() - lastDisplayPrint < 150000) || (initDisplay == HIGH)) {
+
     tft.setTextSize(1);
-    //tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_WHITE);
-    //tft.setFreeFont();
 
     int temperature_int = (int) temperature;
     float temperature_float = (abs(temperature) - abs(temperature_int)) * 100;
@@ -134,24 +179,30 @@ void loop() {
     int humidity_fra = (int)humidity_float;
     sprintf (buf_humidity, "%d.%d", humidity_int, humidity_fra);
 
-    tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
-    tft.drawString(buf_temperature, 85, 70, 6); tft.drawString(".", 219, 53, 6); tft.drawString("C", 230, 88, 4);
-    delay(3000 + random(3000));
 
-    tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
-    tft.drawString(buf_pressure, 45, 70, 6); tft.drawString("hPa", 230, 88, 4);
-    delay(3000 + random(3000));
+    if ((millis() - lastDisplayPart < 3000) && (step == 1)) {
+      tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
+      tft.drawString(buf_temperature, 85, 70, 6); tft.drawString(".", 219, 53, 6); tft.drawString("C", 230, 88, 4);
+      step = 2;
+    }
+    if (((millis() - lastDisplayPart > 3000 + random (2000)) && (millis() - lastDisplayPart < 8000)) && (step == 2)) {
+      tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
+      tft.drawString(buf_pressure, 45, 70, 6); tft.drawString("hPa", 230, 88, 4);
+      step = 3;
+    }
+    if (((millis() - lastDisplayPart > 6000 + random (2000)) && (millis() - lastDisplayPart < 11000)) && (step == 3)) {
+      tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
+      tft.drawString(buf_humidity, 90, 70, 6); tft.drawString("%", 228, 87, 4);
+      step = 4;
+    }
+    if ((millis() - lastDisplayPart > 12000) && (step == 4)) {
+      lastDisplayPart = millis();
+      lastDisplayPrint = millis();
+      step = 1;
+    }
 
-    tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
-    tft.drawString(buf_humidity, 90, 70, 6); tft.drawString("%", 228, 87, 4);
-    delay(3000 + random(3000));
-
-    /*
-    tft.drawString(buf_temperature, 20, 10, 1); tft.drawString("C", 225, 10, 1);
-    tft.drawString(buf_pressure, 20, 50, 1); tft.drawString("hPa", 225, 50, 1);
-    tft.drawString(buf_altitude, 20, 90, 1); tft.drawString("m", 225, 90, 1);
-    tft.drawString(buf_humidity, 20, 130, 1); tft.drawString("%", 225, 130, 1);
-    */
+    initDisplay = LOW;
+  }
 
 }
 
