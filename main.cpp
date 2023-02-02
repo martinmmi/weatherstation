@@ -14,7 +14,7 @@
 #define LCD_MODULE_CMD_1
 #define SEALEVELPRESSURE_HPA (1027)                  // default 1013.25
 #define LED_PIN                        1
-#define LED_COUNT                      3
+#define LED_COUNT                      5
 
 float temperature;
 float pressure;
@@ -118,20 +118,31 @@ void setup() {
 
 void loop() {
 
-  if ((millis() - lastReadSensor > 100) || (initSensor == HIGH)) {
+  if ((millis() - lastReadSensor > 250) || (initSensor == HIGH)) {
     temperature = bme.readTemperature();
     pressure = bme.readPressure() / 100.0F;
     altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
     humidity = bme.readHumidity();
 
+    int temperatureMapRed = map(temperature, 10, 25, 0, 255);
+    int temperatureMapBlue = map(temperature, 10, 25, 65, 0);
+
+    //Serial.println(temperature);
+    //Serial.println(temperatureMapRed);
+    //Serial.println(temperatureMapBlue);
+
     strip.clear();
+		
+    if ((temperature >= 10) && (temperature <= 25) && (humidity < 80)) {
+      strip.fill(strip.Color(temperatureMapRed, 25, temperatureMapBlue), 0, LED_COUNT);														            	
+    }
 
-    if (temperature < 20) {													
-      strip.fill(strip.Color(150 - (3 * temperature), 30, 75 + (3 * temperature)), 0, LED_COUNT);	
-    } 
+    if (((temperature < 10) || (temperature > 25)) && (humidity < 80)) {
+      strip.fill(strip.Color(0, 0, 0), 0, LED_COUNT);														            	
+    }
 
-    if (temperature >= 20) {			
-      strip.fill(strip.Color(150 + (3 * temperature), 30, 75 - (3 * temperature)), 0, LED_COUNT);														            	
+    if (humidity > 80) {
+      strip.fill(strip.Color(255, 0, 0), 0, LED_COUNT);														            	
     }
 
     strip.show();
