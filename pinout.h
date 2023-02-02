@@ -30,3 +30,5 @@
 
 #define PIN_TOUCH_INT                16
 #define PIN_TOUCH_RES                21
+
+#define BME_CS                       10

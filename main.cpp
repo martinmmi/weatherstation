@@ -1,15 +1,34 @@
-#include "Arduino.h"
-#include "TFT_eSPI.h" /* Please use the TFT library provided in the library. */
-#include "img_logo.h"
-#include "pin_config.h"
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
-/* The product now has two screens, and the initialization code needs a small change in the new version. The LCD_MODULE_CMD_1 is used to define the
- * switch macro. */
+#include "Arduino.h"
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+#include <Adafruit_NeoPixel.h>
+#include "TFT_eSPI.h" /* Please use the TFT library provided in the library. */
+#include "logo.h"
+#include "pinout.h"
+
 #define LCD_MODULE_CMD_1
+#define SEALEVELPRESSURE_HPA (1027)     // default 1013.25+
+
+float temperature;
+float pressure;
+float altitude;
+float humidity;
+
+char buf_temperature[6];
+char buf_pressure[8];
+char buf_altitude[5];
+char buf_humidity[6];
+
+Adafruit_BME280 bme(BME_CS);    // hardware spi
+
+//////////////////////////////////////////////////////////////////////
 
 TFT_eSPI tft = TFT_eSPI();
-#define WAIT 1000
-unsigned long targetTime = 0; // Used for testing draw times
 
 #if defined(LCD_MODULE_CMD_1)
 typedef struct {
@@ -36,12 +55,15 @@ lcd_cmd_t lcd_st7789v[] = {
 };
 #endif
 
+//////////////////////////////////////////////////////////////////////
+
 void setup() {
+
   pinMode(PIN_POWER_ON, OUTPUT);
   digitalWrite(PIN_POWER_ON, HIGH);
 
   Serial.begin(115200);
-  Serial.println("Hello T-Display-S3");
+  Serial.println("Weatherstation");
 
   tft.begin();
 
@@ -66,160 +88,40 @@ void setup() {
   ledcSetup(0, 2000, 8);
   ledcAttachPin(PIN_LCD_BL, 0);
   ledcWrite(0, 255);
+
+  bool status = bme.begin(0x76);  
+  if (!status) {
+    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    while (1);
+  }
+
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void loop() {
-  targetTime = millis();
 
-  // First we test them with a background colour set
-  tft.setTextSize(1);
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    temperature = bme.readTemperature();
+    pressure = bme.readPressure() / 100.0F;
+    altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
+    humidity = bme.readHumidity();
 
-  tft.drawString(" !\"#$%&'()*+,-./0123456", 0, 0, 2);
-  tft.drawString("789:;<=>?@ABCDEFGHIJKL", 0, 16, 2);
-  tft.drawString("MNOPQRSTUVWXYZ[\\]^_`", 0, 32, 2);
-  tft.drawString("abcdefghijklmnopqrstuvw", 0, 48, 2);
-  int xpos = 0;
-  xpos += tft.drawString("xyz{|}~", 0, 64, 2);
-  tft.drawChar(127, xpos, 64, 2);
-  delay(WAIT);
+    tft.setTextSize(4);
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE);
 
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    //sprintf(buf_temperature, "%d", temperature);
+    //tft.drawString(buf_temperature, 0, 0, 1);
 
-  tft.drawString(" !\"#$%&'()*+,-.", 0, 0, 4);
-  tft.drawString("/0123456789:;", 0, 26, 4);
-  tft.drawString("<=>?@ABCDE", 0, 52, 4);
-  tft.drawString("FGHIJKLMNO", 0, 78, 4);
-  tft.drawString("PQRSTUVWX", 0, 104, 4);
-  delay(WAIT);
+    Serial.print("Temperature = "); Serial.print(temperature); Serial.println(" *C");
+    Serial.print("Pressure = "); Serial.print(pressure); Serial.println(" hPa");
+    Serial.print("Approx. Altitude = "); Serial.print(altitude); Serial.println(" m");
+    Serial.print("Humidity = "); Serial.print(humidity); Serial.println(" %");
 
-  tft.fillScreen(TFT_BLACK);
-  tft.drawString("YZ[\\]^_`abc", 0, 0, 4);
-  tft.drawString("defghijklmno", 0, 26, 4);
-  tft.drawString("pqrstuvwxyz", 0, 52, 4);
-  xpos = 0;
-  xpos += tft.drawString("{|}~", 0, 78, 4);
-  tft.drawChar(127, xpos, 78, 4);
-  delay(WAIT);
+    delay(2000);
 
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_BLUE, TFT_BLACK);
-
-  tft.drawString("012345", 0, 0, 6);
-  tft.drawString("6789", 0, 40, 6);
-  tft.drawString("apm-:.", 0, 80, 6);
-  delay(WAIT);
-
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_RED, TFT_BLACK);
-
-  tft.drawString("0123", 0, 0, 7);
-  tft.drawString("4567", 0, 60, 7);
-  delay(WAIT);
-
-  tft.fillScreen(TFT_BLACK);
-  tft.drawString("890:.", 0, 0, 7);
-  tft.drawString("", 0, 60, 7);
-  delay(WAIT);
-
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-
-  tft.drawString("01", 0, 0, 8);
-  delay(WAIT);
-
-  tft.drawString("23", 0, 0, 8);
-  delay(WAIT);
-
-  tft.drawString("45", 0, 0, 8);
-  delay(WAIT);
-
-  tft.drawString("67", 0, 0, 8);
-  delay(WAIT);
-
-  tft.drawString("89", 0, 0, 8);
-  delay(WAIT);
-
-  tft.drawString("0:.", 0, 0, 8);
-  delay(WAIT);
-
-  tft.setTextColor(TFT_MAGENTA);
-  tft.drawNumber(millis() - targetTime, 0, 100, 4);
-  delay(4000);
-
-  // Now test them with transparent background
-  targetTime = millis();
-
-  tft.setTextSize(1);
-  tft.fillScreen(TFT_BROWN);
-  tft.setTextColor(TFT_GREEN);
-
-  tft.drawString(" !\"#$%&'()*+,-./0123456", 0, 0, 2);
-  tft.drawString("789:;<=>?@ABCDEFGHIJKL", 0, 16, 2);
-  tft.drawString("MNOPQRSTUVWXYZ[\\]^_`", 0, 32, 2);
-  tft.drawString("abcdefghijklmnopqrstuvw", 0, 48, 2);
-  xpos = 0;
-  xpos += tft.drawString("xyz{|}~", 0, 64, 2);
-  tft.drawChar(127, xpos, 64, 2);
-  delay(WAIT);
-
-  tft.fillScreen(TFT_BROWN);
-  tft.setTextColor(TFT_GREEN);
-
-  tft.drawString(" !\"#$%&'()*+,-.", 0, 0, 4);
-  tft.drawString("/0123456789:;", 0, 26, 4);
-  tft.drawString("<=>?@ABCDE", 0, 52, 4);
-  tft.drawString("FGHIJKLMNO", 0, 78, 4);
-  tft.drawString("PQRSTUVWX", 0, 104, 4);
-
-  delay(WAIT);
-  tft.fillScreen(TFT_BROWN);
-  tft.drawString("YZ[\\]^_`abc", 0, 0, 4);
-  tft.drawString("defghijklmno", 0, 26, 4);
-  tft.drawString("pqrstuvwxyz", 0, 52, 4);
-  xpos = 0;
-  xpos += tft.drawString("{|}~", 0, 78, 4);
-  tft.drawChar(127, xpos, 78, 4);
-  delay(WAIT);
-
-  tft.fillScreen(TFT_BROWN);
-  tft.setTextColor(TFT_BLUE);
-
-  tft.drawString("012345", 0, 0, 6);
-  tft.drawString("6789", 0, 40, 6);
-  tft.drawString("apm-:.", 0, 80, 6);
-  delay(WAIT);
-
-  tft.fillScreen(TFT_BROWN);
-  tft.setTextColor(TFT_RED);
-
-  tft.drawString("0123", 0, 0, 7);
-  tft.drawString("4567", 0, 60, 7);
-  delay(WAIT);
-
-  tft.fillScreen(TFT_BROWN);
-  tft.drawString("890:.", 0, 0, 7);
-  tft.drawString("", 0, 60, 7);
-  delay(WAIT);
-
-  tft.fillScreen(TFT_BROWN);
-  tft.setTextColor(TFT_YELLOW);
-
-  tft.drawString("0123", 0, 0, 8);
-  delay(WAIT);
-
-  tft.fillScreen(TFT_BROWN);
-  tft.drawString("4567", 0, 0, 8);
-  delay(WAIT);
-
-  tft.fillScreen(TFT_BROWN);
-  tft.drawString("890:.", 0, 0, 8);
-  delay(WAIT);
-
-  tft.setTextColor(TFT_MAGENTA);
-
-  tft.drawNumber(millis() - targetTime, 0, 100, 4);
-  delay(4000);
 }
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
