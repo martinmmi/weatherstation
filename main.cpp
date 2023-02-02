@@ -66,6 +66,8 @@ void setup() {
   Serial.println("Weatherstation");
 
   tft.begin();
+  tft.setRotation(3);
+  tft.setSwapBytes(true);
 
 #if defined(LCD_MODULE_CMD_1)
   for (uint8_t i = 0; i < (sizeof(lcd_st7789v) / sizeof(lcd_cmd_t)); i++) {
@@ -79,11 +81,6 @@ void setup() {
     }
   }
 #endif
-
-  tft.setRotation(3);
-  tft.setSwapBytes(true);
-  tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
-  delay(2000);
 
   ledcSetup(0, 2000, 8);
   ledcAttachPin(PIN_LCD_BL, 0);
@@ -106,8 +103,14 @@ void loop() {
     altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
     humidity = bme.readHumidity();
 
-    tft.setTextSize(4);
-    tft.fillScreen(TFT_BLACK);
+    Serial.print("Temperature = "); Serial.print(temperature); Serial.println(" *C");
+    Serial.print("Pressure = "); Serial.print(pressure); Serial.println(" hPa");
+    Serial.print("Approx. Altitude = "); Serial.print(altitude); Serial.println(" m");
+    Serial.print("Humidity = "); Serial.print(humidity); Serial.println(" %");
+    Serial.println("");
+
+    tft.setTextSize(1);
+    //tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_WHITE);
     //tft.setFreeFont();
 
@@ -131,18 +134,24 @@ void loop() {
     int humidity_fra = (int)humidity_float;
     sprintf (buf_humidity, "%d.%d", humidity_int, humidity_fra);
 
+    tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
+    tft.drawString(buf_temperature, 85, 70, 6); tft.drawString(".", 219, 53, 6); tft.drawString("C", 230, 88, 4);
+    delay(3000 + random(3000));
+
+    tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
+    tft.drawString(buf_pressure, 45, 70, 6); tft.drawString("hPa", 230, 88, 4);
+    delay(3000 + random(3000));
+
+    tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
+    tft.drawString(buf_humidity, 90, 70, 6); tft.drawString("%", 228, 87, 4);
+    delay(3000 + random(3000));
+
+    /*
     tft.drawString(buf_temperature, 20, 10, 1); tft.drawString("C", 225, 10, 1);
     tft.drawString(buf_pressure, 20, 50, 1); tft.drawString("hPa", 225, 50, 1);
     tft.drawString(buf_altitude, 20, 90, 1); tft.drawString("m", 225, 90, 1);
     tft.drawString(buf_humidity, 20, 130, 1); tft.drawString("%", 225, 130, 1);
-
-    Serial.print("Temperature = "); Serial.print(temperature); Serial.println(" *C");
-    Serial.print("Pressure = "); Serial.print(pressure); Serial.println(" hPa");
-    Serial.print("Approx. Altitude = "); Serial.print(altitude); Serial.println(" m");
-    Serial.print("Humidity = "); Serial.print(humidity); Serial.println(" %");
-    Serial.println("");
-
-    delay(2000);
+    */
 
 }
 
