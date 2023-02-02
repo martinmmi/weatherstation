@@ -14,7 +14,7 @@
 #define LCD_MODULE_CMD_1
 #define SEALEVELPRESSURE_HPA (1027)                  // default 1013.25
 #define LED_PIN                        1
-#define LED_COUNT                      5
+#define LED_COUNT                      3
 
 float temperature;
 float pressure;
@@ -191,22 +191,22 @@ void loop() {
     sprintf (buf_humidity, "%d.%d", humidity_int, humidity_fra);
 
 
-    if ((millis() - lastDisplayPart < 3000) && (step == 1)) {
+    if ((millis() - lastDisplayPart < 3000 + random (1000)) && (step == 1)) {
       tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
       tft.drawString(buf_temperature, 85, 70, 6); tft.drawString(".", 219, 53, 6); tft.drawString("C", 230, 88, 4);
       step = 2;
     }
-    if (((millis() - lastDisplayPart > 3000 + random (2000)) && (millis() - lastDisplayPart < 8000)) && (step == 2)) {
+    if (((millis() - lastDisplayPart > 4000 + random (2000)) && (millis() - lastDisplayPart < 8000)) && (step == 2)) {
       tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
       tft.drawString(buf_pressure, 45, 70, 6); tft.drawString("hPa", 230, 88, 4);
       step = 3;
     }
-    if (((millis() - lastDisplayPart > 6000 + random (2000)) && (millis() - lastDisplayPart < 11000)) && (step == 3)) {
+    if (((millis() - lastDisplayPart > 8000 + random (2000)) && (millis() - lastDisplayPart < 15000)) && (step == 3)) {
       tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
       tft.drawString(buf_humidity, 90, 70, 6); tft.drawString("%", 228, 87, 4);
       step = 4;
     }
-    if ((millis() - lastDisplayPart > 12000) && (step == 4)) {
+    if ((millis() - lastDisplayPart > 15000) && (step == 4)) {
       lastDisplayPart = millis();
       lastDisplayPrint = millis();
       step = 1;
