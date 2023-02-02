@@ -130,11 +130,14 @@ void loop() {
     //Serial.println(temperature);
     //Serial.println(temperatureMapRed);
     //Serial.println(temperatureMapBlue);
+    //Serial.println(lastDisplayPart);
+    //Serial.println(lastDisplayPrint);
+    //Serial.println(step);
 
     strip.clear();
 		
     if ((temperature >= 10) && (temperature <= 25) && (humidity < 80)) {
-      strip.fill(strip.Color(temperatureMapRed, 25, temperatureMapBlue), 0, LED_COUNT);														            	
+      strip.fill(strip.Color(temperatureMapRed, 20, temperatureMapBlue), 0, LED_COUNT);														            	
     }
 
     if (((temperature < 10) || (temperature > 25)) && (humidity < 80)) {
@@ -165,7 +168,7 @@ void loop() {
   }
   
 
-  if ((millis() - lastDisplayPrint < 150000) || (initDisplay == HIGH)) {
+  if ((millis() - lastDisplayPrint > 1) || (initDisplay == HIGH)) {
 
     tft.setTextSize(1);
     tft.setTextColor(TFT_WHITE);
@@ -191,22 +194,25 @@ void loop() {
     sprintf (buf_humidity, "%d.%d", humidity_int, humidity_fra);
 
 
-    if ((millis() - lastDisplayPart < 3000 + random (1000)) && (step == 1)) {
+    if ((millis() - lastDisplayPart > 3000+random(2000)) && (step == 1)) {
       tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
       tft.drawString(buf_temperature, 85, 70, 6); tft.drawString(".", 219, 53, 6); tft.drawString("C", 230, 88, 4);
       step = 2;
+      lastDisplayPart = millis();
     }
-    if (((millis() - lastDisplayPart > 4000 + random (2000)) && (millis() - lastDisplayPart < 8000)) && (step == 2)) {
+    if ((millis() - lastDisplayPart > 3000 + random(2000)) && (step == 2)) {
       tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
       tft.drawString(buf_pressure, 45, 70, 6); tft.drawString("hPa", 230, 88, 4);
       step = 3;
+      lastDisplayPart = millis();
     }
-    if (((millis() - lastDisplayPart > 8000 + random (2000)) && (millis() - lastDisplayPart < 14000)) && (step == 3)) {
+    if ((millis() - lastDisplayPart > 3000 + random(2000)) && (step == 3)) {
       tft.pushImage(0, 0, 320, 170, (uint16_t *)img_logo);
       tft.drawString(buf_humidity, 90, 70, 6); tft.drawString("%", 228, 87, 4);
       step = 4;
+      lastDisplayPart = millis();
     }
-    if ((millis() - lastDisplayPart > 14000) && (step == 4)) {
+    if ((millis() - lastDisplayPart > 1) && (step == 4)) {
       lastDisplayPart = millis();
       lastDisplayPrint = millis();
       step = 1;
