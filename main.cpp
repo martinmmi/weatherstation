@@ -51,7 +51,7 @@ int waitReminingRandom = 250;
 int debounceTime = 150;
 int displayOffTime = 1200000;
 int calcTime = 300000;
-int serialTime = 2000;
+int serialTime = 10000;
 int readSensorTime = 500;
 int clearTime = 86400000;
 
@@ -214,11 +214,10 @@ void loop() {
     //Serial.println(step);
 
     // Set Neopixel
-    strip.clear();
-    strip.setBrightness(defaultBrightnessLed);    
+    strip.clear(); 
 		
     if ((temperature >= 10) && (temperature <= 25) && (humidity < 80)) {
-      strip.fill(strip.Color(temperatureMapRed, 20, temperatureMapBlue), 0, LED_COUNT);														            	
+      strip.fill(strip.Color(temperatureMapRed, 25, temperatureMapBlue), 0, LED_COUNT);														            	
     }
 
     if (((temperature < 10) || (temperature > 25)) && (humidity < 80)) {
@@ -254,6 +253,7 @@ void loop() {
     lastSerialPrint = millis();
   }
   */
+  
   
   /////////// Print Display Function ///////////
   if ((millis() - lastDisplayPrint > 1) || (initDisplay == HIGH)) {
@@ -390,6 +390,9 @@ void loop() {
           ledcWrite(0, 255);
           turnOff = LOW;
           lastTurnOff = millis();
+          strip.clear();
+          strip.setBrightness(defaultBrightnessLed);   
+          strip.show();
         }
         if (buttonAction == LOW) {
           //Serial.println("LOW");
@@ -398,6 +401,9 @@ void loop() {
           ledcAttachPin(PIN_LCD_BL, 1);
           ledcWrite(0, 255);
           turnOff = HIGH;
+          strip.clear();
+          strip.setBrightness(0);   
+          strip.show();
         }
       }
     }
